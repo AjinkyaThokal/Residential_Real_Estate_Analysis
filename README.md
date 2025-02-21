@@ -64,10 +64,6 @@ The dataset used in this project contains information about residential properti
 
 ---
 
-## Repository Structure
-
----
-
 ## How to Run the Code
 
 1. **Clone the Repository**:
