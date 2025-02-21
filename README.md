@@ -32,6 +32,8 @@ The dataset used in this project contains information about residential properti
    - Examined relationships between variables (e.g., square footage, number of rooms, amenities) and house prices.
    - Found strong positive correlations between square footage, number of rooms, and price.
 
+     ![correlation_plot](Visualisation/correlation_plot.png)
+
 ### 3. **Probability and Hypothesis Testing**
    - Calculated probabilities and confidence intervals for key metrics.
    - Conducted a two-sample t-test to compare house prices for waterfront vs. non-waterfront properties.
@@ -41,6 +43,8 @@ The dataset used in this project contains information about residential properti
    - Built simple and multiple linear regression models to predict house prices based on property characteristics.
    - Used stepwise regression to simplify the model and retain only the most relevant predictors.
    - Evaluated model performance using k-fold cross-validation.
+
+  ![scatter_residuals](Visualisation/scatter_residuals.png)
 
 ---
 
