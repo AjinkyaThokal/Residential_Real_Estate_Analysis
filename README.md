@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The goal of this project is to analyze residential property characteristics and their impact on pricing. By leveraging a rich dataset encompassing various features such as square footage, number of rooms, age, amenities (e.g., pools, fireplaces), and location-specific attributes (e.g., waterfront access), we aim to provide valuable insights into the housing landscape. This analysis serves as a foundation for informed decision-making in the residential real estate domain.
+The goal of this project is to analyze residential property characteristics and their impact on pricing. By leveraging a rich dataset encompassing various features such as square footage, number of rooms, age, amenities (e.g. pools, fireplaces), and location-specific attributes (e.g., waterfront access), we aim to provide valuable insights into the housing landscape. This analysis serves as a foundation for informed decision-making in the residential real estate domain.
 
 ---
 
