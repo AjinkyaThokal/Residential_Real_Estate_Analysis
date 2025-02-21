@@ -1,0 +1,369 @@
+---
+title: " MA334-SP-7_2322905"
+author: "Ajinkya_Thokal_2322905"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, include=FALSE}
+# Let's get necessary libraries
+library(dplyr) 
+library(ggplot2) 
+library(tidyr) 
+library(reshape2)
+library(stats)
+library(MASS)
+library(caret)
+
+# Let's load the dataset
+data <- read.csv("MA334-SP-7_THOKAL_AJINKYA_AVINASH_2322905.csv")
+```
+
+# Data exploration
+
+**Introduction:**
+
+This comprehensive analysis aims to provide valuable insights into the housing landscape by leveraging a rich dataset encompassing various property characteristics. Through descriptive statistics, probability distributions, hypothesis testing, and regression modeling, we uncover the central tendencies, relationships, and underlying patterns that govern this intricate market. The findings shed light on the impact of square footage, number of rooms, age, and amenities such as pools and fireplaces on property values. Additionally, we explore the influence of location-specific attributes, such as waterfront access, on pricing dynamics. By dissecting these multifaceted variables, this study serves as a foundation for informed decision-making and a deeper understanding of the residential real estate domain.
+
+```{r , warning=FALSE, message=FALSE , comment=" ", echo=FALSE , include=FALSE}
+# Number of variables and observations
+print(paste("Number of variables:", ncol(data)))
+print(paste("Number of observations:", nrow(data)))
+
+```
+**Descriptive Statistics:**
+
+```{r, echo = FALSE , comment=" "}
+summary(data)
+
+```
+
+**Trimmed mean:**
+```{r, echo=FALSE, comment=" "}
+# Subset the data to include only the relevant columns
+data_subset <- data[, c("price", "sqft", "bedrooms", "baths", "age")]
+
+# Function to calculate trimmed mean
+trimmed_mean <- function(x, trim = 0.1) {
+  mean(x, trim = trim, na.rm = TRUE)
+}
+
+# Calculate trimmed mean for the relevant variables
+trimmed_means <- sapply(data_subset, trimmed_mean, trim = 0.1)
+
+# Print the trimmed means
+print(trimmed_means)
+```
+
+The dataset provides comprehensive information about residential properties, including prices, square footage, number of bedrooms and bathrooms, age, and additional features like pools, fireplaces, architectural styles, and waterfront status.
+
+Price and Square Footage:
+The prices exhibit a wide range, from $22,000 to $1,580,000, with a median of $132,000 and a mean of $158,839, suggesting the presence of some high-priced outliers. The trimmed mean of $140,109.75 provides a more robust estimate of the central tendency, mitigating the influence of these outliers. Similarly, the square footage varies from 662 to 7,897 square feet, with a median of 2,205 square feet and a trimmed mean of 2,227.35 square feet.
+
+Bedrooms and Bathrooms:
+The number of bedrooms ranges from 1 to 7, with a median and trimmed mean of 3. The number of bathrooms ranges from 1 to 5, with a median of 2 and a trimmed mean of 1.95, indicating a skew towards properties with fewer bathrooms.
+
+Age:
+The age of properties varies from 1 to 80 years, with a median of 18 years and a trimmed mean of 16.63 years, suggesting a mix of newer and older properties.
+
+Additional Features:
+The dataset also provides information on the presence of pools (7.6% of properties), fireplaces (55.7%), and waterfront status (6.9%), as well as architectural styles and days on the market.
+
+These descriptive statistics and trimmed means provide valuable insights into the central tendencies and distributions of key variables, enabling further analysis and modeling of residential property characteristics and their relationships with prices.
+
+**Distribution of variables:**
+
+The distribution of real estate properties' prices and square footage is shown in the plot. With a few extremely high outliers, the majority of prices are low, suggesting a right-skewed distribution. The distribution of square footage is more even, with most units ranging between 2,000 and 6,000 square feet. This implies a mixture of residential buildings, with a few more opulent ones accounting for the premium costs.
+
+```{r, fig.height=3 , echo=FALSE}
+# Histograms
+par(mfrow = c(1, 2))
+hist(data$price, main = "Distribution of Price", xlab = "Price")
+hist(data$sqft, main = "Distribution of Square Footage", xlab = "Square Footage")
+```
+
+
+**Correlation Analysis:**
+
+```{r, fig.height=3, echo=FALSE}
+# Compute the correlation matrix
+corrplot::corrplot(cor(data))
+```
+
+The links between house features are shown in the correlation matrix. Square footage, beds, baths, and the inclusion of a pool all positively correlate with price, suggesting that larger, more feature-rich homes sell for more money. Values of detached single-family houses and waterfront locations are positively correlated with those of newer properties. The presence of a fireplace and home style have weak connections. There may be commonality in larger homes as bedrooms, baths, and square footage all have favorable correlations with these characteristics, as do pools. 
+
+# Probability, probability distributions and confidence intervals: 
+
+**1. Calculating Basic Probabilities:**
+
+```{r, include=FALSE}
+# Let's calculate the Probabilities
+total_houses <- nrow(data)
+houses_with_pool <- sum(data$pool == 1)
+houses_with_pool_and_fireplace <- sum(data$pool == 1 & data$fireplace == 1)
+
+probability_pool <- houses_with_pool / total_houses
+
+conditional_probability_fireplace_given_pool <- houses_with_pool_and_fireplace / houses_with_pool
+```
+
+```{r, echo=FALSE, warning=FALSE, comment=" "}
+# Printing the result
+print(paste("Probability of a pool:", probability_pool))
+print(paste("Conditional probability of a fireplace given a pool:",conditional_probability_fireplace_given_pool))
+```
+
+The probability of finding a pool in homes is approximately 7.6%. Interestingly, if a home has a pool, there's a notably high chance, around 75.4%, of it also having a fireplace. This indicates a significant correlation between pool and fireplace presence in homes.
+
+
+**2. Probability Analysis of Presence of Pools in Randomly Selected Houses:**
+
+```{r, echo=FALSE , comment=" "}
+# Let's calculate out of 10 houses, at least 3 will have a pool
+# number of trails = "10"
+# prob. house having a pool = "0.0759345794392523"
+
+# let's calculate the probability of getting exactly 0, 1, and 2 successes
+probability_0_to_2 <- sum(dbinom(0:2, size = 10, prob =  0.0759345794392523))
+
+# Subtract from 1 to get the probability of getting at least 3 successes
+probability_at_least_3 <- 1 - probability_0_to_2
+
+probability_at_least_3
+```
+
+In order to determine the likelihood that at least three of ten houses will have a pool, this code first uses the binomial distribution to compute the cumulative probability of 0, 1, and 2 successes. It then subtracts this cumulative probability from 1 in order to determine the likelihood of at least three successes, which comes out to be roughly 3.5%.
+
+**3. Confidence Interval for House Prices:**
+
+```{r, comment=" ", echo=FALSE}
+# 95% confidence interval on the mean house price in the USA
+
+sample_mean <- mean(data$price) 
+sample_standard_dev <- sd(data$price)
+n <- length(data$price) 
+
+# let's find the Z-score for 95% confidence level
+z_score <- qnorm(0.975) #for a two-tailed test
+
+
+# let"s calculate margin of error
+margin_error <- z_score * (sample_standard_dev / sqrt(n))
+
+# Calculate confidence interval
+lower_bound <- sample_mean - margin_error
+upper_bound <- sample_mean + margin_error
+
+# Print the confidence interval
+cat("95% Confidence Interval for the mean house price in the USA: [", lower_bound, ",", upper_bound, "]")
+
+```
+The interval we calculated ranges from approximately $150,324 to $167,355. This means we can say with 95% confidence that the average house price in the dataset is between these two figures.
+
+# Contingency tables and hypothesis tests
+
+**1. Two-sample t-test for house prices:**
+
+```{r, echo=FALSE, comment = " "}
+# Extract house prices for houses on the waterfront and not on the waterfront
+house_price_waterfront <- data[data$waterfront == 1, "price"]
+house_price_not_waterfront <- data[data$waterfront == 0, "price"]
+
+# Let's perform the two-sample t-test
+t_test_result <- t.test(house_price_waterfront, house_price_not_waterfront, alternative = "greater")
+
+# Printing the result
+print(t_test_result)
+```
+
+The two-sample t-test compares the average (mean) house prices for houses on the waterfront versus those not on the waterfront.
+
+Result: The mean house price for waterfront houses (\$308,182.2) is significantly greater than that for non-waterfront houses (\$147,783.7) with a p-value of \(8.759 \times 10^{-5}\) at a 95% confidence level. This suggests strong evidence that waterfront houses tend to have higher prices.
+
+**2. Contingency table for pool and fireplace:**
+
+```{r, echo=FALSE, comment=" "}
+# let's create a contingency table
+contingency_table <- table(data$pool, data$fireplace)
+
+# Add row and column names
+rownames(contingency_table) <- c("No_Pool", "Pool")
+colnames(contingency_table) <- c("No_Fireplace", "Fireplace")
+
+# Convert frequencies to relative frequencies
+contingency_table_relative <- prop.table(contingency_table, margin = 1) * 100  # Row-wise percentages
+
+# Print out the table
+print("Contingency Table - Relative Frequencies for Pool and No Pool by Fireplace Presence")
+print(contingency_table_relative)
+```
+
+The contingency table shows the relative frequencies of houses with and without a pool, categorized by the presence or absence of a fireplace. The row "No_Pool" indicates that among houses without a pool, 45.89% did not have a fireplace, while 54.11% had a fireplace. On the other hand, the row "Pool" shows that among houses with a pool, only 24.62% did not have a fireplace, while a majority of 75.38% had a fireplace.
+This suggests that houses with a pool are more likely to have a fireplace as well, compared to houses without a pool. The higher relative frequency of 75.38% for houses with both a pool and a fireplace indicates a potential association between these two features, which could be further explored through statistical tests of independence.
+
+**3. Chi-squared test of independence:**
+
+```{r, echo=FALSE, comment=" "}
+# Create a contingency table
+contingency_table <- table(data$fireplace, data$pool)
+
+# Perform chi-squared test
+chi_squared_test <- chisq.test(contingency_table)
+
+# Print the results
+print("Chi-squared Test of Independence:")
+print(chi_squared_test)
+```
+
+The chi-squared test determines whether the presence of a fireplace and the presence of a pool are independent of each other.
+
+Result: The test yields a p-value of \(0.001424\), which is less than the significance level of \(0.05\). This suggests that there is a significant association between having a fireplace and having a pool in houses. In other words, the presence of a fireplace and the presence of a pool are not independent of each other; they tend to occur together more often than expected by chance.
+
+These results provide valuable insights into the relationships between house features, such as waterfront location, presence of fireplaces, and presence of pools, which can be useful for understanding housing market dynamics and buyer preferences.
+
+# Simple Linear Regression: 
+
+**1. Simple Linear Regression Analysis: ln(Price) and ln(Sqft) as Predictors:**
+
+```{r, echo=FALSE, comment=" "}
+# Take the natural logarithm of 'price' and 'sqft'
+data$ln_price <- log(data$price)
+data$ln_sqft <- log(data$sqft)
+
+# Fit the linear regression model
+model <- lm(ln_price ~ ln_sqft, data = data)
+
+# Print the summary of the model
+summary(model)
+```
+
+The data demonstrates that a house's square footage, or size, has a significant role in determining its cost. We discovered that a house's price generally rises with its size using a linear regression model. The model can account for almost 63.14% of the variations in pricing based just on house size, demonstrating the strength of this link.
+
+**2. Scatter Plot and Residual Analysis: Fitted Model vs. Data:**
+
+Data and fitted model on the left side, a scatter plot illustrates the relationship between house prices and square footage, showing a positive correlation with some variability. On the right side, residuals plotted against the logarithm of square footage reveal potential heteroscedasticity, suggesting varying spread across square footage ranges.
+
+```{r,echo=FALSE, fig.height=3}
+par(mfrow=c(1,2))
+# Scatter plot with data and fitted model
+plot(data$ln_sqft, data$ln_price, xlab = "log(Square Footage)", ylab = "log(Price)", main = "Data and Fitted Model")
+abline(model, col = "red")  # Add the fitted line
+
+# Residuals plot
+residuals <- residuals(model)
+plot(data$ln_sqft, residuals, xlab = "log(Square Footage)", ylab = "Residuals", main = "Residuals vs. ln(Sqft)")
+abline(h = 0, col = "red", lty = 2)  # Add a horizontal line at y = 0
+
+```
+
+
+# Multiple Linear Regression:
+
+**1. Full Model Heading:**
+
+```{r, echo=FALSE , comment=" ", include=FALSE}
+# Multiple linear regression of ln(price) against all predictor variables (full model)
+data$style <- as.factor(data$style)
+data$fireplace <- as.factor(data$fireplace)
+data$waterfront <- as.factor(data$waterfront)
+
+# Convert qualitative variables to factors for proper handling in the regression model
+
+full_model <- lm(ln_price ~ ln_sqft + bedrooms + baths + age + pool + style + fireplace + waterfront + dom, data = data)
+
+# Fit the full linear regression model with ln_price as the response variable
+# and all other variables as predictors, including ln_sqft
+
+summary(full_model)
+```
+```{r, comment= " ", echo=FALSE}
+print(summary(full_model)$call)
+print(summary(full_model)$residuals[1:10])
+print(summary(full_model)$sigma)
+print(summary(full_model)$r.squared)
+print(summary(full_model)$adj.r.squared)
+print(summary(full_model)$fstatistic)
+```
+In this analysis, I fitted a multiple linear regression model to examine the relationship between the natural logarithm of house prices (ln_price) and various predictor variables, including square footage (ln_sqft), number of bedrooms and bathrooms, age of the house, presence of a pool, house style, fireplace, waterfront view, and days on the market (dom).
+The fitted model summary provided the following key insights:
+
+R-squared (0.7418) and Adjusted R-squared (0.7375):These values indicate that the model explains around 73.75% of the variation in ln_price, suggesting a reasonably good fit.
+F-statistic (172.6 on 14 and 841 df) with a very small p-value: This highly significant F-statistic implies that the overall model is statistically significant in explaining the variation in house prices.
+
+Notably, variables such as square footage (ln_sqft), number of bathrooms, age, certain house styles, presence of a fireplace, and waterfront view emerged as significant predictors of house prices based on their associated p-values.
+
+**2. Feature selection using stepwise regression:**
+
+```{r, echo=FALSE, comment=" ", include=FALSE}
+# Feature selection using stepwise regression
+step_model <- stepAIC(full_model, direction = "both")
+
+# Perform stepwise regression using the stepAIC function from the MASS package
+# The direction = "both" argument allows for both forward and backward selection
+# The function selects the best subset of predictor variables based on the Akaike Information Criterion (AIC)
+
+# This will show the selected predictor variables and their coefficients
+summary(step_model)
+```
+```{r, comment=" ", echo=FALSE}
+# Print the call
+print(summary(step_model)$call)
+
+# Print the residual standard error
+print(summary(step_model)$sigma)
+
+# Print the R-squared and Adjusted R-squared
+print(summary(step_model)$r.squared)
+print(summary(step_model)$adj.r.squared)
+
+# Print the F-statistic and associated degrees of freedom
+print(summary(step_model)$fstatistic)
+```
+I performed stepwise regression using the `stepAIC` function from the `MASS` package to select the most relevant predictors for the house price model. This approach uses the Akaike Information Criterion (AIC) to identify the subset of variables that best explains the variation in the natural log of house prices (`ln_price`) while avoiding overfitting.
+
+The selected model includes predictors: `ln_sqft` (log square footage), `baths` (number of bathrooms), `age`, `pool`, `style` (house style categories), `fireplace`, and `waterfront`. 
+
+Key insights:
+- Residual standard error: 0.2754 (typical distance between observed and predicted `ln_price` values)
+- R-squared: 0.7416, Adjusted R-squared: 0.738 (model explains ~73.8% variation in `ln_price`)
+- Highly significant F-statistic (201.7 on 12 and 843 df, p-value < 2.2e-16)
+
+Stepwise regression helped simplify the model by retaining only the most relevant predictors based on the AIC criterion
+
+**3. K-fold cross-validation:**
+
+```{r, echo=FALSE, comment=" "}
+# K-fold cross-validation
+set.seed(123) # Set seed for reproducibility
+
+# Define cross-validation setup
+train_control <- trainControl(method = "cv", number = 10)
+
+# Set up 10-fold cross-validation using the trainControl function from the caret package
+
+# Fit models using cross-validation
+full_cv <- train(ln_price ~ ln_sqft + bedrooms + baths + age + pool + style + fireplace + waterfront + dom,
+                 data = data, method = "lm", trControl = train_control)
+
+# Fit the full model using cross-validation
+
+reduced_cv <- train(ln_price ~ ., data = step_model$model, method = "lm", trControl = train_control)
+
+# Fit the reduced model (obtained from feature selection) using cross-validation
+
+# Print RMSE, Rsquared, and MAE for the full model
+cat("RMSE:", full_cv$results$RMSE, "Rsquared:", full_cv$results$Rsquared, "MAE:", full_cv$results$MAE, "\n")
+
+# Print RMSE, Rsquared, and MAE for the reduced model
+cat("RMSE:", reduced_cv$results$RMSE, "Rsquared:", reduced_cv$results$Rsquared,"MAE:", reduced_cv$results$MAE, "\n")
+# Print the cross-validation results for both the full and reduced models
+# This will display the performance metrics (e.g., RMSE) for each model
+# Comparing the performance metrics will help assess whether the reduced model performs better or worse than the full model
+```
+
+The code performs k-fold cross-validation to evaluate the performance of the full and reduced linear regression models for predicting house prices. Cross-validation provides a reliable estimate of a model's generalization ability by splitting the data into multiple folds and iteratively training and testing on different subsets.
+The results show that the reduced model, obtained through feature selection, has slightly better performance metrics (lower RMSE of 0.2788 and MAE of 0.2010, higher R-squared of 0.7324) compared to the full model (RMSE: 0.2796, MAE: 0.2014, R-squared: 0.7266). The improved metrics suggest that the reduced model, with fewer predictors, generalizes better to unseen data.
