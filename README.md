@@ -19,6 +19,7 @@ The dataset used in this project contains information about residential properti
 - **Waterfront Access**: Binary variable indicating whether the property has waterfront access.
 - **Days on Market (DOM)**: Number of days the property was listed before being sold.
 
+  ![Histograms](Visualisation/histograms.png)
 ---
 
 ## Analysis Highlights
